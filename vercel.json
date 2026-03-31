@@ -1,0 +1,21 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "MPESA_CONSUMER_KEY": "@mpesa_consumer_key",
+    "MPESA_CONSUMER_SECRET": "@mpesa_consumer_secret",
+    "MPESA_INITIATOR_NAME": "@mpesa_initiator_name",
+    "MPESA_SECURITY_CREDENTIAL": "@mpesa_security_credential",
+    "MPESA_SHORTCODE": "@mpesa_shortcode",
+    "MPESA_ENVIRONMENT": "@mpesa_environment",
+    "NEXT_PUBLIC_MONETAG_SITE_ID": "@monetag_site_id",
+    "NEXT_PUBLIC_ADSENSE_CLIENT_ID": "@adsense_client_id",
+    "NEXT_PUBLIC_APP_URL": "@app_url"
+  }
+}
