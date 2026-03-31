@@ -27,8 +27,11 @@ export default function ProfilePage() {
       const { data } = await supabase.from('videos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
       setVideos(data ?? []);
     } else if (tab === 'liked') {
-      const { data } = await supabase.from('likes').select('videos(*)').eq('user_id', user.id).limit(30);
-      setVideos((data?.map((d: { videos: Video }) => d.videos).filter(Boolean) ?? []) as Video[]);
+      const { data: likes } = await supabase.from('likes').select('video_id').eq('user_id', user.id).limit(30);
+      const ids = likes?.map(l => l.video_id).filter(Boolean) ?? [];
+      if (ids.length === 0) { setVideos([]); return; }
+      const { data } = await supabase.from('videos').select('*').in('id', ids);
+      setVideos(data ?? []);
     }
   }
 
