@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Supabase Storage</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Storage Test</h1>
+    <button onclick="testBucket()">Test Videos Bucket</button>
+    <button onclick="listBuckets()">List All Buckets</button>
+    <pre id="output"></pre>
+
+    <script>
+        const supabase = window.supabase.createClient(
+            'https://dkffujuqrhojgzpslmok.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrZmZ1anVxcmhvamd6cHNsbW9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NzU3NzUsImV4cCI6MjA5MDU1MTc3NX0.TUE6LZqp2bv1Xv4AjIeNmEjcUbnbJJPgQvouIDYPw_M'
+        );
+
+        function log(message) {
+            document.getElementById('output').textContent += message + '\n';
+        }
+
+        async function listBuckets() {
+            log('Listing all buckets...');
+            const { data, error } = await supabase.storage.listBuckets();
+            if (error) {
+                log('ERROR: ' + JSON.stringify(error, null, 2));
+            } else {
+                log('Buckets found: ' + JSON.stringify(data, null, 2));
+            }
+        }
+
+        async function testBucket() {
+            log('Testing videos bucket...');
+            
+            // Try to list files in videos bucket
+            const { data, error } = await supabase.storage.from('videos').list();
+            
+            if (error) {
+                log('ERROR accessing videos bucket: ' + JSON.stringify(error, null, 2));
+                log('\nThe bucket probably does not exist or is not accessible.');
+                log('\nTO FIX: Go to Supabase Dashboard → Storage → Create bucket named "videos" and make it PUBLIC');
+            } else {
+                log('SUCCESS! Videos bucket exists and is accessible.');
+                log('Files in bucket: ' + JSON.stringify(data, null, 2));
+            }
+        }
+    </script>
+</body>
+</html>
