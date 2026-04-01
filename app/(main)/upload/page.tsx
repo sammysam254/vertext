@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function UploadPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -30,7 +30,11 @@ export default function UploadPage() {
   }
 
   async function handleUpload() {
-    if (!file || !user) return;
+    if (!file || !user) {
+      setError('Please sign in to upload videos');
+      return;
+    }
+    
     setUploading(true);
     setProgress(10);
     setError('');
@@ -103,6 +107,14 @@ export default function UploadPage() {
     } finally {
       setUploading(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="h-dvh flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#00C853] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   if (!user) {
