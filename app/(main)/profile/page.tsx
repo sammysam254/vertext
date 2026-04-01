@@ -41,15 +41,30 @@ export default function ProfilePage() {
     router.push('/login');
   }
 
-  if (loading) return <div className="h-dvh flex items-center justify-center"><div className="w-8 h-8 border-2 border-[#00C853] border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) {
+    return (
+      <div className="h-dvh flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#00C853] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  if (!user || !profile) {
+  if (!user) {
     return (
       <div className="h-dvh flex items-center justify-center text-center px-8">
         <div>
           <p className="text-[#888] mb-4">Sign in to view your profile</p>
           <Link href="/login" className="bg-[#00C853] text-black px-6 py-2 rounded-full font-semibold">Sign In</Link>
         </div>
+      </div>
+    );
+  }
+
+  // If user exists but profile is still loading, show loading
+  if (!profile) {
+    return (
+      <div className="h-dvh flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#00C853] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

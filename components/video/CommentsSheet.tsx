@@ -32,19 +32,33 @@ export function CommentsSheet({ video, onClose }: CommentsSheetProps) {
   }
 
   async function submitComment() {
-    if (!user || !text.trim()) return;
+    if (!user) {
+      alert('Please sign in to comment');
+      return;
+    }
+    if (!text.trim()) return;
+    
     setLoading(true);
     try {
-      const { error } = await supabase.from('comments').insert({
+      console.log('Submitting comment:', { user_id: user.id, video_id: video.id, content: text.trim() });
+      
+      const { data, error } = await supabase.from('comments').insert({
         user_id: user.id,
         video_id: video.id,
         content: text.trim(),
-      });
-      if (error) throw error;
+      }).select();
+      
+      if (error) {
+        console.error('Comment error details:', error);
+        alert(`Failed to post comment: ${error.message}`);
+        throw error;
+      }
+      
+      console.log('Comment posted successfully:', data);
       setText('');
       await fetchComments();
     } catch (error) {
-      console.error('Comment error:', error);
+      console.error('Comment exception:', error);
     } finally {
       setLoading(false);
     }
@@ -88,25 +102,32 @@ export function CommentsSheet({ video, onClose }: CommentsSheetProps) {
         </div>
 
         {/* Input */}
-        <div className="flex items-center gap-3 p-4 border-t border-[#222]">
-          <div className="w-8 h-8 rounded-full bg-[#222] shrink-0 flex items-center justify-center text-xs text-[#00C853] font-bold">
-            {profile?.username?.[0]?.toUpperCase() ?? 'U'}
+        {user ? (
+          <div className="flex items-center gap-3 p-4 border-t border-[#222]">
+            <div className="w-8 h-8 rounded-full bg-[#222] shrink-0 flex items-center justify-center text-xs text-[#00C853] font-bold">
+              {profile?.username?.[0]?.toUpperCase() ?? 'U'}
+            </div>
+            <input
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Add a comment..."
+              className="flex-1 bg-[#1A1A1A] rounded-full px-4 py-2 text-sm text-white placeholder-[#555] focus:outline-none focus:ring-1 focus:ring-[#00C853]"
+              onKeyDown={e => e.key === 'Enter' && submitComment()}
+            />
+            <button
+              onClick={submitComment}
+              disabled={!text.trim() || loading}
+              className="text-[#00C853] disabled:opacity-30"
+            >
+              <Send size={20} />
+            </button>
           </div>
-          <input
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="Add a comment..."
-            className="flex-1 bg-[#1A1A1A] rounded-full px-4 py-2 text-sm text-white placeholder-[#555] focus:outline-none focus:ring-1 focus:ring-[#00C853]"
-            onKeyDown={e => e.key === 'Enter' && submitComment()}
-          />
-          <button
-            onClick={submitComment}
-            disabled={!text.trim() || loading}
-            className="text-[#00C853] disabled:opacity-30"
-          >
-            <Send size={20} />
-          </button>
-        </div>
+        ) : (
+          <div className="p-4 border-t border-[#222] text-center">
+            <p className="text-sm text-[#888] mb-2">Sign in to comment</p>
+            <a href="/login" className="text-[#00C853] text-sm font-semibold">Sign In</a>
+          </div>
+        )}
       </div>
     </div>
   );

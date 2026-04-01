@@ -67,43 +67,89 @@ export function VideoPlayer({ video, isActive, shouldPreload, onComment }: Video
   }, [user, video.id]);
 
   const handleLike = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('User not logged in, cannot like');
+      return;
+    }
+    
     try {
+      console.log('Like button clicked, current state:', liked);
+      
       if (liked) {
-        await supabase.from('likes').delete().eq('user_id', user.id).eq('video_id', video.id);
+        const { error } = await supabase
+          .from('likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('video_id', video.id);
+        
+        if (error) throw error;
+        
         setLiked(false);
         setLikeCount(c => c - 1);
+        
         // Update profile total likes
         await supabase.rpc('decrement_user_likes', { p_user_id: video.user_id });
+        console.log('Unliked successfully');
       } else {
-        await supabase.from('likes').insert({ user_id: user.id, video_id: video.id });
+        const { error } = await supabase
+          .from('likes')
+          .insert({ user_id: user.id, video_id: video.id });
+        
+        if (error) throw error;
+        
         setLiked(true);
         setLikeCount(c => c + 1);
+        
         // Update profile total likes
         await supabase.rpc('increment_user_likes', { p_user_id: video.user_id });
+        console.log('Liked successfully');
       }
     } catch (error) {
       console.error('Like error:', error);
+      alert('Failed to like video. Please try again.');
     }
   }, [user, liked, video.id, video.user_id]);
 
   const handleShare = useCallback(async () => {
     try {
+      console.log('Share button clicked');
+      
+      const shareUrl = `${window.location.origin}/video/${video.id}`;
+      const shareData = {
+        title: 'Check out this video on Vertex',
+        text: video.description || 'Watch this video on Vertex',
+        url: shareUrl,
+      };
+      
+      console.log('Share data:', shareData);
+      
       if (navigator.share) {
-        await navigator.share({
-          title: `Check out this video on Vertex`,
-          text: video.description || 'Watch this video on Vertex',
-          url: window.location.origin + `/video/${video.id}`,
-        });
+        console.log('Using native share');
+        await navigator.share(shareData);
+        console.log('Share successful');
       } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(window.location.origin + `/video/${video.id}`);
+        console.log('Using clipboard fallback');
+        await navigator.clipboard.writeText(shareUrl);
         alert('Link copied to clipboard!');
       }
+      
       // Increment share count
-      await supabase.from('videos').update({ share_count: video.share_count + 1 }).eq('id', video.id);
+      const { error } = await supabase
+        .from('videos')
+        .update({ share_count: video.share_count + 1 })
+        .eq('id', video.id);
+      
+      if (error) {
+        console.error('Failed to update share count:', error);
+      } else {
+        console.log('Share count updated');
+      }
     } catch (error) {
       console.error('Share error:', error);
+      // If share was cancelled, don't show error
+      if (error instanceof Error && error.name !== 'AbortError') {
+        alert('Failed to share. Please try again.');
+      }
     }
   }, [video]);
 

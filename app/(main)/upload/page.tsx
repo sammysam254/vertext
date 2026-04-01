@@ -36,10 +36,17 @@ export default function UploadPage() {
     setError('');
 
     try {
+      // Log for debugging
+      console.log('Starting upload for user:', user.id);
+      console.log('File details:', { name: file.name, type: file.type, size: file.size });
+
       const ext = file.name.split('.').pop();
       const path = `${user.id}/${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading to path:', path);
+
+      // Try to upload
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
         .upload(path, file, { 
           contentType: file.type,
@@ -47,12 +54,29 @@ export default function UploadPage() {
         });
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
+        console.error('Upload error details:', {
+          message: uploadError.message,
+          statusCode: uploadError.statusCode,
+          error: uploadError
+        });
+        
+        // Provide specific error messages
+        if (uploadError.message?.toLowerCase().includes('bucket')) {
+          throw new Error('Video storage is not set up. Please create the "videos" bucket in Supabase Storage and make it public.');
+        } else if (uploadError.message?.toLowerCase().includes('policy')) {
+          throw new Error('Permission denied. Please check storage policies in Supabase.');
+        } else if (uploadError.message?.toLowerCase().includes('size')) {
+          throw new Error('Video file is too large. Maximum size is 200MB.');
+        }
+        
         throw new Error(uploadError.message || 'Failed to upload video');
       }
+
+      console.log('Upload successful:', uploadData);
       setProgress(70);
 
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(path);
+      console.log('Public URL:', publicUrl);
 
       const tags = hashtags.split(/[\s,#]+/).filter(Boolean).map(t => t.toLowerCase());
 
@@ -69,6 +93,8 @@ export default function UploadPage() {
         console.error('Database error:', dbError);
         throw new Error(dbError.message || 'Failed to save video');
       }
+
+      console.log('Video saved to database');
       setProgress(100);
       setTimeout(() => router.push('/'), 500);
     } catch (err: unknown) {
