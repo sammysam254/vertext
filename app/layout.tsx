@@ -7,6 +7,18 @@ export const metadata: Metadata = {
   description: 'Create, share, and earn on Vertex',
   manifest: '/manifest.json',
   themeColor: '#00C853',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Vertex',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

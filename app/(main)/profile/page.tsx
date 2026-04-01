@@ -17,9 +17,10 @@ export default function ProfilePage() {
   const [videos, setVideos] = useState<Video[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-    loadVideos();
-  }, [user, tab]);
+    if (!loading && user) {
+      loadVideos();
+    }
+  }, [user, tab, loading]);
 
   async function loadVideos() {
     if (!user) return;

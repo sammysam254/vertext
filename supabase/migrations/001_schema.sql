@@ -148,15 +148,33 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- Auto-create profile on signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS trigger AS $$
+DECLARE
+  v_username text;
+  v_counter integer := 0;
 BEGIN
+  -- Get the desired username
+  v_username := COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1));
+  
+  -- Ensure username is unique by appending a number if needed
+  WHILE EXISTS (SELECT 1 FROM profiles WHERE username = v_username) LOOP
+    v_counter := v_counter + 1;
+    v_username := COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)) || v_counter::text;
+  END LOOP;
+  
   INSERT INTO profiles (id, username, display_name)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
+    v_username,
     COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1))
   )
   ON CONFLICT (id) DO NOTHING;
+  
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error but don't fail the auth signup
+    RAISE WARNING 'Failed to create profile for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -212,6 +230,26 @@ BEGIN
       total_withdrawn_kes = total_withdrawn_kes - p_amount,
       updated_at = now()
   WHERE user_id = p_user_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Increment user total likes
+CREATE OR REPLACE FUNCTION increment_user_likes(p_user_id uuid)
+RETURNS void AS $$
+BEGIN
+  UPDATE profiles
+  SET total_likes = total_likes + 1
+  WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Decrement user total likes
+CREATE OR REPLACE FUNCTION decrement_user_likes(p_user_id uuid)
+RETURNS void AS $$
+BEGIN
+  UPDATE profiles
+  SET total_likes = GREATEST(total_likes - 1, 0)
+  WHERE id = p_user_id;
 END;
 $$ LANGUAGE plpgsql;
 

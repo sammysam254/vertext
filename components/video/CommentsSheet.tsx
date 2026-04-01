@@ -34,14 +34,20 @@ export function CommentsSheet({ video, onClose }: CommentsSheetProps) {
   async function submitComment() {
     if (!user || !text.trim()) return;
     setLoading(true);
-    await supabase.from('comments').insert({
-      user_id: user.id,
-      video_id: video.id,
-      content: text.trim(),
-    });
-    setText('');
-    await fetchComments();
-    setLoading(false);
+    try {
+      const { error } = await supabase.from('comments').insert({
+        user_id: user.id,
+        video_id: video.id,
+        content: text.trim(),
+      });
+      if (error) throw error;
+      setText('');
+      await fetchComments();
+    } catch (error) {
+      console.error('Comment error:', error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

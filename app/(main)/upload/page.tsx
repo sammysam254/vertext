@@ -33,6 +33,7 @@ export default function UploadPage() {
     if (!file || !user) return;
     setUploading(true);
     setProgress(10);
+    setError('');
 
     try {
       const ext = file.name.split('.').pop();
@@ -40,9 +41,15 @@ export default function UploadPage() {
 
       const { error: uploadError } = await supabase.storage
         .from('videos')
-        .upload(path, file, { contentType: file.type });
+        .upload(path, file, { 
+          contentType: file.type,
+          upsert: false 
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(uploadError.message || 'Failed to upload video');
+      }
       setProgress(70);
 
       const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(path);
@@ -58,11 +65,15 @@ export default function UploadPage() {
         allow_comments: allowComments,
       });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database error:', dbError);
+        throw new Error(dbError.message || 'Failed to save video');
+      }
       setProgress(100);
-      router.push('/');
+      setTimeout(() => router.push('/'), 500);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      console.error('Upload failed:', err);
+      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }

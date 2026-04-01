@@ -53,12 +53,11 @@ export function EarningsCard({ userId }: EarningsCardProps) {
     setTimeout(() => setToast(''), 3000);
   }
 
-  const platformRevenue = earnings?.total_platform_revenue_kes ?? 0;
   const totalEarned = earnings?.total_earned_kes ?? 0;
   const available = earnings?.available_balance_kes ?? 0;
-  const nextMilestone = [1000, 5000, 10000, 50000, 100000].find(m => m > platformRevenue) ?? 100000;
-  const prevMilestone = [0, 1000, 5000, 10000, 50000].find((_, i, arr) => arr[i + 1] > platformRevenue) ?? 0;
-  const milestoneProgress = (platformRevenue - prevMilestone) / (nextMilestone - prevMilestone);
+  const nextMilestone = [100, 500, 1000, 5000, 10000].find(m => m > totalEarned) ?? 10000;
+  const prevMilestone = [0, 100, 500, 1000, 5000].find((_, i, arr) => arr[i + 1] > totalEarned) ?? 0;
+  const milestoneProgress = (totalEarned - prevMilestone) / (nextMilestone - prevMilestone);
 
   return (
     <>
@@ -77,19 +76,11 @@ export function EarningsCard({ userId }: EarningsCardProps) {
             <span className="font-semibold">Your Earnings</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-[#1A1A1A] rounded-xl p-3">
-              <p className="text-xs text-[#888] mb-1">Total Earned</p>
-              <p className="text-xl font-bold text-[#FFD700] font-mono-earnings">
-                KES {totalEarned.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="bg-[#1A1A1A] rounded-xl p-3">
-              <p className="text-xs text-[#888] mb-1">Platform Revenue</p>
-              <p className="text-xl font-bold text-white font-mono-earnings">
-                KES {platformRevenue.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
+          <div className="bg-[#1A1A1A] rounded-xl p-3 mb-4">
+            <p className="text-xs text-[#888] mb-1">Total Earned</p>
+            <p className="text-2xl font-bold text-[#FFD700] font-mono-earnings">
+              KES {totalEarned.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
           </div>
 
           {/* Available balance + withdraw */}
@@ -114,7 +105,7 @@ export function EarningsCard({ userId }: EarningsCardProps) {
         <div className="bg-[#111] rounded-2xl p-4 border border-[#222]">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp size={16} className="text-[#00C853]" />
-            <span className="text-sm font-semibold">Progress to next KES {nextMilestone.toLocaleString()}</span>
+            <span className="text-sm font-semibold">Next milestone: KES {nextMilestone.toLocaleString()}</span>
           </div>
           <div className="w-full bg-[#222] rounded-full h-2 mb-2">
             <div
@@ -123,11 +114,11 @@ export function EarningsCard({ userId }: EarningsCardProps) {
             />
           </div>
           <div className="flex justify-between text-xs text-[#555]">
-            <span>KES {platformRevenue.toFixed(0)}</span>
+            <span>KES {totalEarned.toFixed(0)}</span>
             <span>KES {nextMilestone.toLocaleString()}</span>
           </div>
           <p className="text-xs text-[#888] mt-2">
-            Earn KES {(nextMilestone * CREATOR_SHARE_RATE).toLocaleString()} when you hit it!
+            Keep creating great content to reach your next milestone! 🎯
           </p>
         </div>
 
@@ -137,10 +128,11 @@ export function EarningsCard({ userId }: EarningsCardProps) {
             💡 How earnings work
           </summary>
           <div className="px-4 pb-4 text-sm text-[#888] space-y-2">
-            <p>For every <span className="text-[#00C853]">KES 1,000</span> Vertex earns from ads on your videos, you receive <span className="text-[#FFD700]">KES 400</span> (40% revenue share).</p>
+            <p>You earn money when people watch your videos and interact with ads.</p>
             <div className="bg-[#1A1A1A] rounded-xl p-3 space-y-1 text-xs">
-              <p>Platform earns KES 3,000 → <span className="text-[#FFD700]">You earn KES 1,200</span></p>
-              <p>Platform earns KES 10,000 → <span className="text-[#FFD700]">You earn KES 4,000</span></p>
+              <p>✓ More views = More earnings</p>
+              <p>✓ Longer watch time = Higher rewards</p>
+              <p>✓ Engaging content = Better performance</p>
             </div>
             <p className="text-xs">Minimum withdrawal: KES 50</p>
           </div>

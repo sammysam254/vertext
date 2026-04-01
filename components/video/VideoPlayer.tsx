@@ -16,7 +16,7 @@ interface VideoPlayerProps {
 export function VideoPlayer({ video, isActive, shouldPreload, onComment }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user } = useAuth();
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(video.like_count);
   const [hearts, setHearts] = useState<{ id: number; x: number }[]>([]);
@@ -68,16 +68,44 @@ export function VideoPlayer({ video, isActive, shouldPreload, onComment }: Video
 
   const handleLike = useCallback(async () => {
     if (!user) return;
-    if (liked) {
-      await supabase.from('likes').delete().eq('user_id', user.id).eq('video_id', video.id);
-      setLiked(false);
-      setLikeCount(c => c - 1);
-    } else {
-      await supabase.from('likes').insert({ user_id: user.id, video_id: video.id });
-      setLiked(true);
-      setLikeCount(c => c + 1);
+    try {
+      if (liked) {
+        await supabase.from('likes').delete().eq('user_id', user.id).eq('video_id', video.id);
+        setLiked(false);
+        setLikeCount(c => c - 1);
+        // Update profile total likes
+        await supabase.rpc('decrement_user_likes', { p_user_id: video.user_id });
+      } else {
+        await supabase.from('likes').insert({ user_id: user.id, video_id: video.id });
+        setLiked(true);
+        setLikeCount(c => c + 1);
+        // Update profile total likes
+        await supabase.rpc('increment_user_likes', { p_user_id: video.user_id });
+      }
+    } catch (error) {
+      console.error('Like error:', error);
     }
-  }, [user, liked, video.id]);
+  }, [user, liked, video.id, video.user_id]);
+
+  const handleShare = useCallback(async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Check out this video on Vertex`,
+          text: video.description || 'Watch this video on Vertex',
+          url: window.location.origin + `/video/${video.id}`,
+        });
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(window.location.origin + `/video/${video.id}`);
+        alert('Link copied to clipboard!');
+      }
+      // Increment share count
+      await supabase.from('videos').update({ share_count: video.share_count + 1 }).eq('id', video.id);
+    } catch (error) {
+      console.error('Share error:', error);
+    }
+  }, [video]);
 
   function handleTap(e: React.MouseEvent) {
     const now = Date.now();
@@ -213,7 +241,7 @@ export function VideoPlayer({ video, isActive, shouldPreload, onComment }: Video
         </button>
 
         {/* Share */}
-        <button className="flex flex-col items-center gap-1">
+        <button onClick={handleShare} className="flex flex-col items-center gap-1">
           <Share2 size={28} className="text-white" strokeWidth={2} />
           <span className="text-xs text-white">{formatCount(video.share_count)}</span>
         </button>
