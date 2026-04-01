@@ -62,7 +62,7 @@ export function VideoPlayer({ video, isActive, shouldPreload, onComment }: Video
       .select('id')
       .eq('user_id', user.id)
       .eq('video_id', video.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => setLiked(!!data));
   }, [user, video.id]);
 
